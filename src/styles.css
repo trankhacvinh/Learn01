@@ -149,6 +149,64 @@ h1 {
   color: #334155;
 }
 
+.speech-control {
+  padding-top: 14px;
+}
+
+.speech-heading p {
+  margin: -5px 0 11px;
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+.speech-options {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.speech-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  padding: 9px 10px;
+  border: 2px solid #e2e8f0;
+  border-radius: 12px;
+  background: #fff;
+  color: #475569;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 800;
+  user-select: none;
+}
+
+.speech-option input {
+  width: 17px;
+  height: 17px;
+  margin: 0;
+  accent-color: #253b80;
+}
+
+.speech-option.checked {
+  border-color: #253b80;
+  background: #eef3ff;
+  color: #172453;
+}
+
+.speech-option.locked {
+  border-color: #86b795;
+  background: #eefaf1;
+  color: #28643a;
+  cursor: default;
+}
+
+.speech-option.locked input {
+  accent-color: #388c50;
+}
+
 .split {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -216,7 +274,7 @@ h1 {
   box-shadow: 0 4px 0 #172453;
 }
 
-button:focus-visible, .phrase-card:focus-visible {
+button:focus-visible, .phrase-card:focus-visible, .speech-option:has(input:focus-visible) {
   outline: 4px solid #fbbf24;
   outline-offset: 2px;
 }
@@ -235,6 +293,8 @@ button:focus-visible, .phrase-card:focus-visible {
   .viewer-wrap { min-height: 46vh; }
   .controls { padding: 13px; }
   .split { grid-template-columns: 1fr; gap: 6px; }
+  .speech-options { grid-template-columns: 1fr 1fr; }
+  .speech-option { padding: 8px; font-size: 11px; }
   .color-row { grid-template-columns: repeat(5, 1fr); }
   .color-button { font-size: 9px; padding: 6px 2px; }
   .color-button span { width: 20px; height: 20px; }
