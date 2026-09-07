@@ -100,7 +100,7 @@ function FireTruck({ color, scale, position, moving, onClick }: FireTruckProps) 
         <meshStandardMaterial color="#f8fafc" />
       </mesh>
       <mesh position={[1.28, 2.29, 0]}>
-        <capsuleGeometry args={[0.12, 0.15, 6, 12]} />
+        <sphereGeometry args={[0.16, 16, 12]} />
         <meshStandardMaterial color="#fb2c36" emissive="#7f1d1d" emissiveIntensity={0.5} />
       </mesh>
 
