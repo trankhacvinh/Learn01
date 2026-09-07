@@ -36,6 +36,10 @@ const speechChoices: Array<{ key: SpeechOption; label: string; icon: string }> =
   { key: 'time', label: 'Time', icon: '☀️' },
 ]
 
+function randomItem<T>(items: readonly T[]): T {
+  return items[Math.floor(Math.random() * items.length)]
+}
+
 function Wheel({ position }: { position: [number, number, number] }) {
   return (
     <group position={position} rotation={[Math.PI / 2, 0, 0]}>
@@ -341,6 +345,15 @@ function App() {
     setSpeechOptions((current) => ({ ...current, [key]: !current[key] }))
   }
 
+  const randomizeScene = () => {
+    setSelectedColor(randomItem(colors))
+    setSize(randomItem<SizeName>(['small', 'big']))
+    setQuantity(randomItem([1, 2, 3]))
+    setMoving(Math.random() < 0.5)
+    setEnvironment(randomItem<EnvironmentName>(['city', 'park']))
+    setTime(randomItem<TimeOfDay>(['day', 'night']))
+  }
+
   const speak = () => {
     window.speechSynthesis.cancel()
     const utterance = new SpeechSynthesisUtterance(phrase)
@@ -385,9 +398,14 @@ function App() {
           <p className="eyebrow">3D English Playground</p>
           <h1>Learn01</h1>
         </div>
-        <button className="speak-top" onClick={speak} aria-label="Read the English phrase">
-          🔊 Read
-        </button>
+        <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+          <button className="speak-top" onClick={randomizeScene} aria-label="Randomize the scene">
+            🎲 Random
+          </button>
+          <button className="speak-top" onClick={speak} aria-label="Read the English phrase">
+            🔊 Read
+          </button>
+        </div>
       </header>
 
       <section className="learning-card">
