@@ -1,7 +1,6 @@
 import { Canvas } from '@react-three/fiber'
-import { OrbitControls, Stars } from '@react-three/drei'
+import { ContactShadows, OrbitControls, RoundedBox, Stars } from '@react-three/drei'
 import { useMemo, useState } from 'react'
-import * as THREE from 'three'
 import { SubjectModel } from './SubjectModel'
 import {
   categories,
@@ -45,70 +44,128 @@ function titleCase(value: string) {
   return value.charAt(0).toUpperCase() + value.slice(1)
 }
 
-function City() {
+function Building({
+  position,
+  size,
+  color,
+  windows,
+}: {
+  position: [number, number, number]
+  size: [number, number, number]
+  color: string
+  windows: number
+}) {
+  const rows = Math.max(1, Math.floor(size[1] / 1.05))
+  return (
+    <group position={position}>
+      <RoundedBox args={size} radius={0.22} smoothness={4} castShadow receiveShadow>
+        <meshStandardMaterial color={color} roughness={0.78} />
+      </RoundedBox>
+      {Array.from({ length: rows }).flatMap((_, row) =>
+        Array.from({ length: windows }).map((__, column) => {
+          const x = ((column + 1) / (windows + 1) - 0.5) * (size[0] * 0.75)
+          const y = -size[1] / 2 + 0.62 + row * 0.9
+          return (
+            <RoundedBox
+              key={`${row}-${column}`}
+              args={[0.32, 0.38, 0.045]}
+              radius={0.05}
+              smoothness={3}
+              position={[x, y, size[2] / 2 + 0.025]}
+            >
+              <meshStandardMaterial color="#d8f1ff" roughness={0.2} emissive="#8fc9ec" emissiveIntensity={0.08} />
+            </RoundedBox>
+          )
+        }),
+      )}
+    </group>
+  )
+}
+
+function City({ isNight }: { isNight: boolean }) {
   const buildings = useMemo(
     () => [
-      [-5, 1.5, -5, 1.7, 3, 1.8],
-      [-2.7, 2.2, -5.3, 1.8, 4.4, 1.7],
-      [0, 1.35, -5.8, 2.1, 2.7, 1.7],
-      [3.1, 2.7, -5.4, 1.9, 5.4, 1.8],
-      [5.3, 1.65, -5.1, 1.5, 3.3, 1.7],
-    ],
+      { p: [-5.3, 1.55, -5.7], s: [1.7, 3.1, 1.7], c: '#f2a7a0', w: 2 },
+      { p: [-3.0, 2.05, -5.9], s: [1.8, 4.1, 1.7], c: '#9ec5e8', w: 2 },
+      { p: [-0.45, 1.5, -6.2], s: [2.1, 3.0, 1.8], c: '#f3ca79', w: 3 },
+      { p: [2.45, 2.35, -5.95], s: [1.9, 4.7, 1.8], c: '#b7a6dc', w: 2 },
+      { p: [5.05, 1.75, -5.7], s: [1.75, 3.5, 1.7], c: '#97d0ba', w: 2 },
+    ] as Array<{ p: [number, number, number]; s: [number, number, number]; c: string; w: number }>,
     [],
   )
 
   return (
     <group>
-      {buildings.map(([x, y, z, sx, sy, sz], index) => (
-        <mesh key={index} position={[x, y, z]} receiveShadow castShadow>
-          <boxGeometry args={[sx, sy, sz]} />
-          <meshStandardMaterial color={index % 2 === 0 ? '#94a3b8' : '#64748b'} roughness={0.9} />
-        </mesh>
-      ))}
-      <mesh position={[0, 0.015, 0]} receiveShadow>
-        <boxGeometry args={[18, 0.03, 5.2]} />
-        <meshStandardMaterial color="#475569" roughness={1} />
+      <mesh position={[0, -0.055, 0]} receiveShadow>
+        <boxGeometry args={[20, 0.12, 13]} />
+        <meshStandardMaterial color={isNight ? '#26364b' : '#cfe9f6'} roughness={1} />
       </mesh>
-      {[-4, 0, 4].map((x) => (
-        <mesh key={x} position={[x, 0.04, 0]}>
-          <boxGeometry args={[2, 0.025, 0.09]} />
-          <meshBasicMaterial color="#f8fafc" />
-        </mesh>
+      <RoundedBox args={[19, 0.08, 5.7]} radius={0.22} smoothness={4} position={[0, 0.015, 0]} receiveShadow>
+        <meshStandardMaterial color={isNight ? '#334155' : '#536577'} roughness={0.96} />
+      </RoundedBox>
+      <RoundedBox args={[19, 0.09, 1.05]} radius={0.16} smoothness={4} position={[0, 0.05, -3.35]} receiveShadow>
+        <meshStandardMaterial color={isNight ? '#667386' : '#e8e2d4'} roughness={0.95} />
+      </RoundedBox>
+      {[-5.6, -2.8, 0, 2.8, 5.6].map((x) => (
+        <RoundedBox key={x} args={[1.55, 0.035, 0.1]} radius={0.03} smoothness={2} position={[x, 0.075, 0]}>
+          <meshBasicMaterial color="#f8efd0" />
+        </RoundedBox>
+      ))}
+      {buildings.map((building, index) => (
+        <Building
+          key={index}
+          position={building.p}
+          size={building.s}
+          color={isNight ? '#42516a' : building.c}
+          windows={building.w}
+        />
       ))}
     </group>
   )
 }
 
-function Tree({ position }: { position: [number, number, number] }) {
+function Tree({ position, scale = 1 }: { position: [number, number, number]; scale?: number }) {
   return (
-    <group position={position}>
-      <mesh castShadow position={[0, 0.8, 0]}>
-        <cylinderGeometry args={[0.16, 0.2, 1.6, 10]} />
-        <meshStandardMaterial color="#8b5a2b" roughness={1} />
+    <group position={position} scale={scale}>
+      <mesh castShadow position={[0, 0.72, 0]}>
+        <cylinderGeometry args={[0.14, 0.19, 1.45, 12]} />
+        <meshStandardMaterial color="#9a693f" roughness={0.9} />
       </mesh>
-      <mesh castShadow position={[0, 2, 0]}>
-        <sphereGeometry args={[0.9, 18, 14]} />
-        <meshStandardMaterial color="#34a853" roughness={0.95} />
+      <mesh castShadow position={[0, 1.75, 0]} scale={[0.9, 1, 0.9]}>
+        <dodecahedronGeometry args={[0.82, 1]} />
+        <meshStandardMaterial color="#58ad6d" roughness={0.9} />
+      </mesh>
+      <mesh castShadow position={[0.45, 1.6, 0.18]} scale={0.72}>
+        <dodecahedronGeometry args={[0.72, 1]} />
+        <meshStandardMaterial color="#6fbd79" roughness={0.9} />
       </mesh>
     </group>
   )
 }
 
-function Park() {
+function Park({ isNight }: { isNight: boolean }) {
   return (
     <group>
-      <mesh position={[0, -0.02, 0]} receiveShadow>
-        <boxGeometry args={[18, 0.05, 12]} />
-        <meshStandardMaterial color="#86c86a" roughness={1} />
+      <mesh position={[0, -0.055, 0]} receiveShadow>
+        <boxGeometry args={[20, 0.12, 13]} />
+        <meshStandardMaterial color={isNight ? '#27423c' : '#9bd486'} roughness={1} />
       </mesh>
-      <mesh position={[0, 0.015, 0]} receiveShadow>
-        <boxGeometry args={[18, 0.03, 3.8]} />
-        <meshStandardMaterial color="#c8b48a" roughness={1} />
-      </mesh>
-      <Tree position={[-5, 0, -3.5]} />
-      <Tree position={[-2.6, 0, -4.2]} />
-      <Tree position={[3.2, 0, -4]} />
-      <Tree position={[5.3, 0, -3.2]} />
+      <RoundedBox args={[19, 0.075, 3.8]} radius={0.32} smoothness={5} position={[0, 0.015, 0]} receiveShadow>
+        <meshStandardMaterial color={isNight ? '#7b725f' : '#e2cda5'} roughness={0.95} />
+      </RoundedBox>
+      <Tree position={[-5.2, 0, -3.7]} scale={1.05} />
+      <Tree position={[-2.7, 0, -4.35]} scale={0.82} />
+      <Tree position={[2.9, 0, -4.2]} scale={0.9} />
+      <Tree position={[5.2, 0, -3.55]} scale={1.08} />
+      <RoundedBox args={[1.7, 0.17, 0.56]} radius={0.09} smoothness={4} position={[-4.1, 0.72, 2.65]} castShadow>
+        <meshStandardMaterial color="#b17b4c" roughness={0.8} />
+      </RoundedBox>
+      <RoundedBox args={[0.12, 0.85, 0.12]} radius={0.04} smoothness={3} position={[-4.65, 0.34, 2.65]} castShadow>
+        <meshStandardMaterial color="#475569" roughness={0.65} />
+      </RoundedBox>
+      <RoundedBox args={[0.12, 0.85, 0.12]} radius={0.04} smoothness={3} position={[-3.55, 0.34, 2.65]} castShadow>
+        <meshStandardMaterial color="#475569" roughness={0.65} />
+      </RoundedBox>
     </group>
   )
 }
@@ -132,31 +189,50 @@ function LearningScene({
   time: TimeOfDay
   onSubjectClick: () => void
 }) {
-  const spacing = size === 'big' ? 4.2 : 3.25
+  const spacing = size === 'big' ? 4.15 : 3.2
   const positions = Array.from({ length: quantity }, (_, index) => {
     const center = (quantity - 1) / 2
     return [(index - center) * spacing, 0, 0] as [number, number, number]
   })
   const isNight = time === 'night'
   const objectColor = subject.features.color ? color : subject.defaultColor
-  const baseScale = size === 'big' ? 1.04 : 0.74
-  const categoryScale = subject.category === 'shapes' ? 1.15 : subject.category === 'animals' ? 0.92 : 1
+  const baseScale = size === 'big' ? 1.02 : 0.73
+  const categoryScale = subject.category === 'shapes' ? 1.13 : subject.category === 'animals' ? 0.9 : 1
 
   return (
     <>
-      <color attach="background" args={[isNight ? '#0f172a' : '#bfe7ff']} />
-      {isNight && <Stars radius={45} depth={25} count={900} factor={2.2} fade speed={0.35} />}
-      <ambientLight intensity={isNight ? 0.58 : 1.25} />
+      <color attach="background" args={[isNight ? '#111a2e' : '#dff3ff']} />
+      <fog attach="fog" args={[isNight ? '#111a2e' : '#dff3ff', 16, 30]} />
+      {isNight && <Stars radius={48} depth={28} count={700} factor={2} fade speed={0.2} />}
+
+      <hemisphereLight args={[isNight ? '#8fa7d8' : '#fff7e5', isNight ? '#26374a' : '#7aa775', isNight ? 1.15 : 1.75]} />
+      <ambientLight intensity={isNight ? 0.28 : 0.42} />
       <directionalLight
         castShadow
-        position={[5, 9, 5]}
-        intensity={isNight ? 1.25 : 2.3}
-        color={isNight ? '#b9c9ff' : '#fff4d6'}
-        shadow-mapSize-width={1024}
-        shadow-mapSize-height={1024}
+        position={[6, 9, 7]}
+        intensity={isNight ? 1.45 : 2.5}
+        color={isNight ? '#b9c9ff' : '#fff1cf'}
+        shadow-mapSize-width={2048}
+        shadow-mapSize-height={2048}
+        shadow-camera-left={-9}
+        shadow-camera-right={9}
+        shadow-camera-top={8}
+        shadow-camera-bottom={-5}
+        shadow-bias={-0.0003}
+        shadow-normalBias={0.025}
       />
-      {isNight && <pointLight position={[0, 5, 2]} intensity={28} distance={18} color="#ffd98a" />}
-      {environment === 'city' ? <City /> : <Park />}
+      <pointLight position={[-5, 5, 5]} intensity={isNight ? 8 : 4} distance={18} color={isNight ? '#ffd89b' : '#c9e7ff'} />
+
+      {environment === 'city' ? <City isNight={isNight} /> : <Park isNight={isNight} />}
+
+      <ContactShadows
+        position={[0, 0.07, 0]}
+        opacity={isNight ? 0.38 : 0.28}
+        scale={15}
+        blur={2.8}
+        far={5.5}
+        resolution={512}
+      />
 
       {positions.map((position, index) => (
         <SubjectModel
@@ -173,11 +249,11 @@ function LearningScene({
       <OrbitControls
         makeDefault
         enablePan={false}
-        minDistance={7}
-        maxDistance={15}
-        minPolarAngle={Math.PI / 4}
-        maxPolarAngle={Math.PI / 2.05}
-        target={[0, 1, 0]}
+        minDistance={6.4}
+        maxDistance={13.5}
+        minPolarAngle={Math.PI / 4.3}
+        maxPolarAngle={Math.PI / 2.08}
+        target={[0, 1.15, 0]}
       />
     </>
   )
@@ -372,7 +448,12 @@ function App() {
 
       <section className="learning-card">
         <div className="viewer-wrap">
-          <Canvas shadows camera={{ position: [7.5, 5.2, 8.2], fov: 42 }} dpr={[1, 1.7]}>
+          <Canvas
+            shadows
+            camera={{ position: [7.2, 4.5, 7.8], fov: 40 }}
+            dpr={[1, 1.8]}
+            gl={{ antialias: true, powerPreference: 'high-performance' }}
+          >
             <LearningScene
               subject={selectedSubject}
               color={selectedColor.value}
