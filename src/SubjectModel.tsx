@@ -18,17 +18,21 @@ type SubjectModelProps = {
 
 export function SubjectModel({ subject, color, scale, position, active, onClick }: SubjectModelProps) {
   const group = useRef<THREE.Group>(null)
+  const isVehicle = subject.category === 'vehicles'
+  const baseX = isVehicle ? position[0] * 1.22 : position[0]
+  const baseY = isVehicle ? position[1] + 0.08 : position[1]
+  const layoutPosition: [number, number, number] = [baseX, baseY, position[2]]
 
   useFrame(({ clock }) => {
     if (!group.current) return
     const t = clock.getElapsedTime()
-    group.current.position.set(...position)
+    group.current.position.set(...layoutPosition)
     group.current.rotation.set(0, 0, 0)
 
     if (!active) return
 
-    if (subject.category === 'vehicles') {
-      group.current.position.x = position[0] + Math.sin(t * 1.5) * 0.7
+    if (isVehicle) {
+      group.current.position.x = baseX + Math.sin(t * 1.5) * 0.7
       group.current.rotation.y = Math.sin(t * 0.75) * 0.035
     } else if (subject.category === 'animals') {
       group.current.position.x = position[0] + Math.sin(t * 1.25) * 0.45
@@ -44,7 +48,7 @@ export function SubjectModel({ subject, color, scale, position, active, onClick 
   return (
     <group
       ref={group}
-      position={position}
+      position={layoutPosition}
       scale={scale}
       onClick={(event) => {
         event.stopPropagation()
