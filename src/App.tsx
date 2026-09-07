@@ -1,21 +1,22 @@
-import { Canvas, useFrame } from '@react-three/fiber'
+import { Canvas } from '@react-three/fiber'
 import { OrbitControls, Stars } from '@react-three/drei'
-import { useMemo, useRef, useState } from 'react'
+import { useMemo, useState } from 'react'
 import * as THREE from 'three'
+import { SubjectModel } from './SubjectModel'
+import {
+  categories,
+  subjects,
+  subjectsForCategory,
+  type CategoryId,
+  type LearningSubject,
+  type SoundType,
+} from './catalog'
 
 type TimeOfDay = 'day' | 'night'
 type EnvironmentName = 'city' | 'park'
 type SizeName = 'small' | 'big'
 type SpeechOption = 'color' | 'size' | 'quantity' | 'action' | 'environment' | 'time'
 type SpeechOptions = Record<SpeechOption, boolean>
-
-type FireTruckProps = {
-  color: string
-  scale: number
-  position: [number, number, number]
-  moving: boolean
-  onClick: () => void
-}
 
 const colors = [
   { name: 'Red', value: '#ef4444' },
@@ -40,100 +41,8 @@ function randomItem<T>(items: readonly T[]): T {
   return items[Math.floor(Math.random() * items.length)]
 }
 
-function Wheel({ position }: { position: [number, number, number] }) {
-  return (
-    <group position={position} rotation={[Math.PI / 2, 0, 0]}>
-      <mesh castShadow>
-        <cylinderGeometry args={[0.34, 0.34, 0.34, 24]} />
-        <meshStandardMaterial color="#20242d" roughness={0.85} />
-      </mesh>
-      <mesh position={[0, 0.19, 0]}>
-        <cylinderGeometry args={[0.16, 0.16, 0.36, 20]} />
-        <meshStandardMaterial color="#cbd5e1" metalness={0.65} roughness={0.3} />
-      </mesh>
-    </group>
-  )
-}
-
-function FireTruck({ color, scale, position, moving, onClick }: FireTruckProps) {
-  const group = useRef<THREE.Group>(null)
-
-  useFrame(({ clock }) => {
-    if (!group.current) return
-    const t = clock.getElapsedTime()
-    group.current.position.x = position[0] + (moving ? Math.sin(t * 1.7) * 0.9 : 0)
-    group.current.rotation.y = moving ? Math.sin(t * 0.85) * 0.05 : 0
-  })
-
-  return (
-    <group
-      ref={group}
-      position={position}
-      scale={scale}
-      onClick={(event) => {
-        event.stopPropagation()
-        onClick()
-      }}
-    >
-      <mesh castShadow position={[0, 0.95, 0]}>
-        <boxGeometry args={[3.2, 1.1, 1.65]} />
-        <meshStandardMaterial color={color} roughness={0.48} />
-      </mesh>
-
-      <mesh castShadow position={[1.15, 1.65, 0]}>
-        <boxGeometry args={[1.05, 0.85, 1.65]} />
-        <meshStandardMaterial color={color} roughness={0.48} />
-      </mesh>
-
-      <mesh castShadow position={[1.7, 1.27, 0]}>
-        <boxGeometry args={[0.16, 0.7, 1.44]} />
-        <meshStandardMaterial color="#e2e8f0" roughness={0.45} />
-      </mesh>
-
-      <mesh position={[1.18, 1.72, 0.83]}>
-        <boxGeometry args={[0.68, 0.42, 0.04]} />
-        <meshStandardMaterial color="#9bd7ff" roughness={0.18} metalness={0.12} />
-      </mesh>
-      <mesh position={[1.18, 1.72, -0.83]}>
-        <boxGeometry args={[0.68, 0.42, 0.04]} />
-        <meshStandardMaterial color="#9bd7ff" roughness={0.18} metalness={0.12} />
-      </mesh>
-
-      <mesh castShadow position={[-0.5, 1.59, 0]} rotation={[0, 0, -0.05]}>
-        <boxGeometry args={[2.3, 0.12, 0.13]} />
-        <meshStandardMaterial color="#d1d5db" metalness={0.55} roughness={0.28} />
-      </mesh>
-      {[-1.35, -0.9, -0.45, 0, 0.45].map((x) => (
-        <mesh key={x} castShadow position={[x, 1.59, 0]} rotation={[Math.PI / 2, 0, 0]}>
-          <cylinderGeometry args={[0.045, 0.045, 0.56, 10]} />
-          <meshStandardMaterial color="#d1d5db" metalness={0.55} roughness={0.28} />
-        </mesh>
-      ))}
-
-      <mesh position={[1.28, 2.17, 0]}>
-        <boxGeometry args={[0.5, 0.12, 0.35]} />
-        <meshStandardMaterial color="#f8fafc" />
-      </mesh>
-      <mesh position={[1.28, 2.29, 0]}>
-        <sphereGeometry args={[0.16, 16, 12]} />
-        <meshStandardMaterial color="#fb2c36" emissive="#7f1d1d" emissiveIntensity={0.5} />
-      </mesh>
-
-      <mesh position={[1.78, 1.28, 0.48]}>
-        <boxGeometry args={[0.05, 0.22, 0.28]} />
-        <meshStandardMaterial color="#fde047" emissive="#facc15" emissiveIntensity={0.35} />
-      </mesh>
-      <mesh position={[1.78, 1.28, -0.48]}>
-        <boxGeometry args={[0.05, 0.22, 0.28]} />
-        <meshStandardMaterial color="#fde047" emissive="#facc15" emissiveIntensity={0.35} />
-      </mesh>
-
-      <Wheel position={[1.05, 0.45, 0.94]} />
-      <Wheel position={[1.05, 0.45, -0.94]} />
-      <Wheel position={[-1.05, 0.45, 0.94]} />
-      <Wheel position={[-1.05, 0.45, -0.94]} />
-    </group>
-  )
+function titleCase(value: string) {
+  return value.charAt(0).toUpperCase() + value.slice(1)
 }
 
 function City() {
@@ -205,38 +114,43 @@ function Park() {
 }
 
 function LearningScene({
+  subject,
   color,
   size,
   quantity,
-  moving,
+  active,
   environment,
   time,
-  onTruckClick,
+  onSubjectClick,
 }: {
+  subject: LearningSubject
   color: string
   size: SizeName
   quantity: number
-  moving: boolean
+  active: boolean
   environment: EnvironmentName
   time: TimeOfDay
-  onTruckClick: () => void
+  onSubjectClick: () => void
 }) {
-  const spacing = size === 'big' ? 4.5 : 3.5
+  const spacing = size === 'big' ? 4.2 : 3.25
   const positions = Array.from({ length: quantity }, (_, index) => {
     const center = (quantity - 1) / 2
     return [(index - center) * spacing, 0, 0] as [number, number, number]
   })
   const isNight = time === 'night'
+  const objectColor = subject.features.color ? color : subject.defaultColor
+  const baseScale = size === 'big' ? 1.04 : 0.74
+  const categoryScale = subject.category === 'shapes' ? 1.15 : subject.category === 'animals' ? 0.92 : 1
 
   return (
     <>
       <color attach="background" args={[isNight ? '#0f172a' : '#bfe7ff']} />
       {isNight && <Stars radius={45} depth={25} count={900} factor={2.2} fade speed={0.35} />}
-      <ambientLight intensity={isNight ? 0.55 : 1.25} />
+      <ambientLight intensity={isNight ? 0.58 : 1.25} />
       <directionalLight
         castShadow
         position={[5, 9, 5]}
-        intensity={isNight ? 1.2 : 2.3}
+        intensity={isNight ? 1.25 : 2.3}
         color={isNight ? '#b9c9ff' : '#fff4d6'}
         shadow-mapSize-width={1024}
         shadow-mapSize-height={1024}
@@ -245,13 +159,14 @@ function LearningScene({
       {environment === 'city' ? <City /> : <Park />}
 
       {positions.map((position, index) => (
-        <FireTruck
-          key={index}
-          color={color}
-          scale={size === 'big' ? 1.12 : 0.78}
+        <SubjectModel
+          key={`${subject.id}-${index}`}
+          subject={subject}
+          color={objectColor}
+          scale={baseScale * categoryScale}
           position={position}
-          moving={moving}
-          onClick={onTruckClick}
+          active={active}
+          onClick={onSubjectClick}
         />
       ))}
 
@@ -259,7 +174,7 @@ function LearningScene({
         makeDefault
         enablePan={false}
         minDistance={7}
-        maxDistance={14}
+        maxDistance={15}
         minPolarAngle={Math.PI / 4}
         maxPolarAngle={Math.PI / 2.05}
         target={[0, 1, 0]}
@@ -269,57 +184,114 @@ function LearningScene({
 }
 
 function buildPhrase({
+  subject,
   selectedColor,
   size,
   quantity,
-  moving,
+  active,
   environment,
   time,
   speechOptions,
 }: {
+  subject: LearningSubject
   selectedColor: (typeof colors)[number]
   size: SizeName
   quantity: number
-  moving: boolean
+  active: boolean
   environment: EnvironmentName
   time: TimeOfDay
   speechOptions: SpeechOptions
 }) {
-  const plural = speechOptions.quantity && quantity > 1
+  const includeQuantity = subject.features.quantity && speechOptions.quantity
+  const plural = includeQuantity && quantity > 1
   const words: string[] = []
 
-  if (speechOptions.quantity) words.push(numberWords[quantity].toLowerCase())
-  if (speechOptions.size) words.push(size)
-  if (speechOptions.color) words.push(selectedColor.name.toLowerCase())
-  words.push(plural ? 'fire trucks' : 'fire truck')
+  if (includeQuantity) words.push(numberWords[quantity].toLowerCase())
+  if (subject.features.size && speechOptions.size) words.push(size)
+  if (subject.features.color && speechOptions.color) words.push(selectedColor.name.toLowerCase())
+  words.push(plural ? subject.plural : subject.name.toLowerCase())
 
   let phrase = words.join(' ')
 
-  if (speechOptions.action) {
-    const actionWord = moving ? 'moving' : 'parked'
-    if (speechOptions.quantity) {
+  if (subject.features.action && speechOptions.action) {
+    const actionWord = active ? subject.actionActive : subject.actionStill
+    if (includeQuantity) {
       phrase += ` ${quantity === 1 ? 'is' : 'are'} ${actionWord}`
     } else {
       phrase = `the ${phrase} is ${actionWord}`
     }
   }
 
-  if (speechOptions.environment) {
+  if (subject.features.environment && speechOptions.environment) {
     phrase += environment === 'city' ? ' in the city' : ' in the park'
   }
 
-  if (speechOptions.time) {
+  if (subject.features.time && speechOptions.time) {
     phrase += time === 'day' ? ' during the day' : ' at night'
   }
 
   return `${phrase.charAt(0).toUpperCase()}${phrase.slice(1)}.`
 }
 
+function playSound(type: SoundType) {
+  if (type === 'none') return
+
+  const AudioContextClass = window.AudioContext
+  if (!AudioContextClass) return
+
+  const context = new AudioContextClass()
+  const gain = context.createGain()
+  gain.connect(context.destination)
+  const now = context.currentTime
+
+  const tone = (frequency: number, start: number, duration: number, endFrequency = frequency, volume = 0.1) => {
+    const oscillator = context.createOscillator()
+    oscillator.type = type === 'roar' ? 'sawtooth' : type === 'horn' ? 'square' : 'sine'
+    oscillator.frequency.setValueAtTime(frequency, now + start)
+    oscillator.frequency.linearRampToValueAtTime(endFrequency, now + start + duration)
+    const localGain = context.createGain()
+    localGain.gain.setValueAtTime(0.0001, now + start)
+    localGain.gain.exponentialRampToValueAtTime(volume, now + start + 0.03)
+    localGain.gain.exponentialRampToValueAtTime(0.0001, now + start + duration)
+    oscillator.connect(localGain)
+    localGain.connect(gain)
+    oscillator.start(now + start)
+    oscillator.stop(now + start + duration)
+  }
+
+  if (type === 'siren') {
+    tone(620, 0, 0.36, 920, 0.09)
+    tone(920, 0.36, 0.36, 620, 0.09)
+    tone(620, 0.72, 0.36, 920, 0.09)
+    tone(920, 1.08, 0.36, 620, 0.09)
+  } else if (type === 'horn') {
+    tone(280, 0, 0.38, 265, 0.08)
+    tone(240, 0.48, 0.38, 230, 0.08)
+  } else if (type === 'woof') {
+    tone(190, 0, 0.18, 125, 0.12)
+    tone(180, 0.26, 0.2, 110, 0.12)
+  } else if (type === 'meow') {
+    tone(520, 0, 0.7, 760, 0.07)
+    tone(760, 0.7, 0.4, 480, 0.055)
+  } else if (type === 'roar') {
+    tone(115, 0, 1.0, 75, 0.07)
+    tone(90, 0.18, 0.9, 62, 0.05)
+  } else if (type === 'trumpet') {
+    tone(380, 0, 0.45, 680, 0.08)
+    tone(680, 0.45, 0.35, 520, 0.08)
+    tone(520, 0.8, 0.45, 760, 0.07)
+  }
+
+  window.setTimeout(() => void context.close(), 1800)
+}
+
 function App() {
+  const [selectedCategory, setSelectedCategory] = useState<CategoryId>('vehicles')
+  const [selectedSubjectId, setSelectedSubjectId] = useState('fire-truck')
   const [selectedColor, setSelectedColor] = useState<(typeof colors)[number]>(colors[1])
   const [size, setSize] = useState<SizeName>('big')
   const [quantity, setQuantity] = useState(1)
-  const [moving, setMoving] = useState(false)
+  const [active, setActive] = useState(false)
   const [environment, setEnvironment] = useState<EnvironmentName>('city')
   const [time, setTime] = useState<TimeOfDay>('day')
   const [speechOptions, setSpeechOptions] = useState<SpeechOptions>({
@@ -331,25 +303,38 @@ function App() {
     time: false,
   })
 
+  const selectedSubject = subjects.find((subject) => subject.id === selectedSubjectId) ?? subjects[0]
+  const visibleSubjects = subjectsForCategory(selectedCategory)
   const phrase = buildPhrase({
+    subject: selectedSubject,
     selectedColor,
     size,
     quantity,
-    moving,
+    active,
     environment,
     time,
     speechOptions,
   })
 
+  const selectCategory = (category: CategoryId) => {
+    setSelectedCategory(category)
+    const firstSubject = subjectsForCategory(category)[0]
+    setSelectedSubjectId(firstSubject.id)
+  }
+
   const toggleSpeechOption = (key: SpeechOption) => {
+    if (!selectedSubject.features[key]) return
     setSpeechOptions((current) => ({ ...current, [key]: !current[key] }))
   }
 
   const randomizeScene = () => {
+    const nextSubject = randomItem(subjects)
+    setSelectedCategory(nextSubject.category)
+    setSelectedSubjectId(nextSubject.id)
     setSelectedColor(randomItem(colors))
     setSize(randomItem<SizeName>(['small', 'big']))
     setQuantity(randomItem([1, 2, 3]))
-    setMoving(Math.random() < 0.5)
+    setActive(Math.random() < 0.5)
     setEnvironment(randomItem<EnvironmentName>(['city', 'park']))
     setTime(randomItem<TimeOfDay>(['day', 'night']))
   }
@@ -363,32 +348,9 @@ function App() {
     window.speechSynthesis.speak(utterance)
   }
 
-  const playSiren = () => {
-    const AudioContextClass = window.AudioContext
-    if (!AudioContextClass) return
-
-    const context = new AudioContextClass()
-    const oscillator = context.createOscillator()
-    const gain = context.createGain()
-    const now = context.currentTime
-
-    oscillator.type = 'sine'
-    oscillator.frequency.setValueAtTime(620, now)
-    oscillator.frequency.linearRampToValueAtTime(920, now + 0.35)
-    oscillator.frequency.linearRampToValueAtTime(620, now + 0.7)
-    oscillator.frequency.linearRampToValueAtTime(920, now + 1.05)
-    oscillator.frequency.linearRampToValueAtTime(620, now + 1.4)
-
-    gain.gain.setValueAtTime(0.0001, now)
-    gain.gain.exponentialRampToValueAtTime(0.11, now + 0.04)
-    gain.gain.setValueAtTime(0.11, now + 1.3)
-    gain.gain.exponentialRampToValueAtTime(0.0001, now + 1.48)
-
-    oscillator.connect(gain)
-    gain.connect(context.destination)
-    oscillator.start(now)
-    oscillator.stop(now + 1.5)
-    oscillator.addEventListener('ended', () => void context.close())
+  const onSubjectClick = () => {
+    if (selectedSubject.features.sound) playSound(selectedSubject.soundType)
+    else speak()
   }
 
   return (
@@ -398,8 +360,8 @@ function App() {
           <p className="eyebrow">3D English Playground</p>
           <h1>Learn01</h1>
         </div>
-        <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
-          <button className="speak-top" onClick={randomizeScene} aria-label="Randomize the scene">
+        <div className="topbar-actions">
+          <button className="random-button" onClick={randomizeScene} aria-label="Randomize subject and scene">
             🎲 Random
           </button>
           <button className="speak-top" onClick={speak} aria-label="Read the English phrase">
@@ -412,115 +374,171 @@ function App() {
         <div className="viewer-wrap">
           <Canvas shadows camera={{ position: [7.5, 5.2, 8.2], fov: 42 }} dpr={[1, 1.7]}>
             <LearningScene
+              subject={selectedSubject}
               color={selectedColor.value}
               size={size}
               quantity={quantity}
-              moving={moving}
+              active={active}
               environment={environment}
               time={time}
-              onTruckClick={playSiren}
+              onSubjectClick={onSubjectClick}
             />
           </Canvas>
-          <div className="viewer-tip">↔ Drag to look around · Tap the truck for siren</div>
+          <div className="viewer-badge">{selectedSubject.emoji} {selectedSubject.name}</div>
+          <div className="viewer-tip">
+            ↔ Drag to look around · {selectedSubject.features.sound ? `Tap for ${selectedSubject.soundLabel}` : 'Tap to listen'}
+          </div>
         </div>
 
         <aside className="controls">
+          <section className="catalog-section">
+            <h2>Choose a topic</h2>
+            <div className="category-row">
+              {categories.map((category) => (
+                <button
+                  key={category.id}
+                  className={selectedCategory === category.id ? 'category-button selected' : 'category-button'}
+                  onClick={() => selectCategory(category.id)}
+                >
+                  <span>{category.emoji}</span>
+                  {category.name}
+                </button>
+              ))}
+            </div>
+
+            <h2 className="subject-heading">Choose a subject</h2>
+            <div className="subject-grid">
+              {visibleSubjects.map((subject) => (
+                <button
+                  key={subject.id}
+                  className={selectedSubject.id === subject.id ? 'subject-button selected' : 'subject-button'}
+                  onClick={() => setSelectedSubjectId(subject.id)}
+                >
+                  <span className="subject-emoji">{subject.emoji}</span>
+                  <span>{subject.name}</span>
+                </button>
+              ))}
+            </div>
+          </section>
+
           <div className="phrase-card" onClick={speak} role="button" tabIndex={0} onKeyDown={(e) => e.key === 'Enter' && speak()}>
-            <span className="object-label">FIRE TRUCK</span>
+            <span className="object-label">{selectedSubject.name.toUpperCase()}</span>
             <strong>{phrase}</strong>
             <span className="tap-hint">🔊 Tap to listen</span>
           </div>
 
           <section className="control-group speech-control">
             <div className="speech-heading">
-              <div>
-                <h2>🗣️ Read aloud</h2>
-                <p>Choose what to include. Fire truck is always included.</p>
-              </div>
+              <h2>🗣️ Read aloud</h2>
+              <p>Choose what to include. The subject is always included.</p>
             </div>
             <div className="speech-options">
               <label className="speech-option locked">
                 <input type="checkbox" checked disabled />
-                <span>🚒 Object</span>
+                <span>{selectedSubject.emoji} Subject</span>
               </label>
-              {speechChoices.map((choice) => (
-                <label key={choice.key} className={`speech-option ${speechOptions[choice.key] ? 'checked' : ''}`}>
-                  <input
-                    type="checkbox"
-                    checked={speechOptions[choice.key]}
-                    onChange={() => toggleSpeechOption(choice.key)}
-                  />
-                  <span>{choice.icon} {choice.label}</span>
-                </label>
-              ))}
+              {speechChoices.map((choice) => {
+                const supported = selectedSubject.features[choice.key]
+                const checked = supported && speechOptions[choice.key]
+                return (
+                  <label
+                    key={choice.key}
+                    className={`speech-option ${checked ? 'checked' : ''} ${supported ? '' : 'unsupported'}`}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={checked}
+                      disabled={!supported}
+                      onChange={() => toggleSpeechOption(choice.key)}
+                    />
+                    <span>{choice.icon} {choice.label}</span>
+                  </label>
+                )
+              })}
             </div>
           </section>
 
-          <section className="control-group">
-            <h2>🎨 Color</h2>
-            <div className="color-row">
-              {colors.map((item) => (
-                <button
-                  key={item.name}
-                  className={`color-button ${selectedColor.name === item.name ? 'active' : ''}`}
-                  onClick={() => setSelectedColor(item)}
-                  title={item.name}
-                  aria-label={item.name}
-                >
-                  <span style={{ background: item.value }} />
-                  {item.name}
-                </button>
-              ))}
-            </div>
-          </section>
-
-          <section className="control-group split">
-            <div>
-              <h2>📏 Size</h2>
-              <div className="choice-row">
-                <button className={size === 'small' ? 'selected' : ''} onClick={() => setSize('small')}>Small</button>
-                <button className={size === 'big' ? 'selected' : ''} onClick={() => setSize('big')}>Big</button>
-              </div>
-            </div>
-            <div>
-              <h2>🔢 Quantity</h2>
-              <div className="choice-row">
-                {[1, 2, 3].map((count) => (
-                  <button key={count} className={quantity === count ? 'selected' : ''} onClick={() => setQuantity(count)}>{count}</button>
+          {selectedSubject.features.color && (
+            <section className="control-group">
+              <h2>🎨 Color</h2>
+              <div className="color-row">
+                {colors.map((item) => (
+                  <button
+                    key={item.name}
+                    className={`color-button ${selectedColor.name === item.name ? 'active' : ''}`}
+                    onClick={() => setSelectedColor(item)}
+                    title={item.name}
+                    aria-label={item.name}
+                  >
+                    <span style={{ background: item.value }} />
+                    {item.name}
+                  </button>
                 ))}
               </div>
-            </div>
+            </section>
+          )}
+
+          <section className="control-group split">
+            {selectedSubject.features.size && (
+              <div>
+                <h2>📏 Size</h2>
+                <div className="choice-row">
+                  <button className={size === 'small' ? 'selected' : ''} onClick={() => setSize('small')}>Small</button>
+                  <button className={size === 'big' ? 'selected' : ''} onClick={() => setSize('big')}>Big</button>
+                </div>
+              </div>
+            )}
+            {selectedSubject.features.quantity && (
+              <div>
+                <h2>🔢 Quantity</h2>
+                <div className="choice-row">
+                  {[1, 2, 3].map((count) => (
+                    <button key={count} className={quantity === count ? 'selected' : ''} onClick={() => setQuantity(count)}>{count}</button>
+                  ))}
+                </div>
+              </div>
+            )}
           </section>
 
           <section className="control-group split">
-            <div>
-              <h2>🏃 Action</h2>
-              <div className="choice-row">
-                <button className={!moving ? 'selected' : ''} onClick={() => setMoving(false)}>Park</button>
-                <button className={moving ? 'selected' : ''} onClick={() => setMoving(true)}>Move</button>
+            {selectedSubject.features.action && (
+              <div>
+                <h2>🏃 Action</h2>
+                <div className="choice-row">
+                  <button className={!active ? 'selected' : ''} onClick={() => setActive(false)}>{titleCase(selectedSubject.actionStill)}</button>
+                  <button className={active ? 'selected' : ''} onClick={() => setActive(true)}>{titleCase(selectedSubject.actionActive)}</button>
+                </div>
               </div>
-            </div>
-            <div>
-              <h2>🔊 Sound</h2>
-              <button className="sound-button" onClick={playSiren}>🚨 Siren</button>
-            </div>
+            )}
+            {selectedSubject.features.sound && (
+              <div>
+                <h2>🔊 Sound</h2>
+                <button className="sound-button" onClick={() => playSound(selectedSubject.soundType)}>
+                  {selectedSubject.emoji} {selectedSubject.soundLabel}
+                </button>
+              </div>
+            )}
           </section>
 
           <section className="control-group split">
-            <div>
-              <h2>🌍 Place</h2>
-              <div className="choice-row">
-                <button className={environment === 'city' ? 'selected' : ''} onClick={() => setEnvironment('city')}>🏙️ City</button>
-                <button className={environment === 'park' ? 'selected' : ''} onClick={() => setEnvironment('park')}>🌳 Park</button>
+            {selectedSubject.features.environment && (
+              <div>
+                <h2>🌍 Place</h2>
+                <div className="choice-row">
+                  <button className={environment === 'city' ? 'selected' : ''} onClick={() => setEnvironment('city')}>🏙️ City</button>
+                  <button className={environment === 'park' ? 'selected' : ''} onClick={() => setEnvironment('park')}>🌳 Park</button>
+                </div>
               </div>
-            </div>
-            <div>
-              <h2>☀️ Time</h2>
-              <div className="choice-row">
-                <button className={time === 'day' ? 'selected' : ''} onClick={() => setTime('day')}>☀️ Day</button>
-                <button className={time === 'night' ? 'selected' : ''} onClick={() => setTime('night')}>🌙 Night</button>
+            )}
+            {selectedSubject.features.time && (
+              <div>
+                <h2>☀️ Time</h2>
+                <div className="choice-row">
+                  <button className={time === 'day' ? 'selected' : ''} onClick={() => setTime('day')}>☀️ Day</button>
+                  <button className={time === 'night' ? 'selected' : ''} onClick={() => setTime('night')}>🌙 Night</button>
+                </div>
               </div>
-            </div>
+            )}
           </section>
         </aside>
       </section>
