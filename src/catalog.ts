@@ -43,9 +43,29 @@ const naturalAnimal = {
   sound: true,
 } satisfies Record<FeatureKey, boolean>
 
+const quietAnimal = {
+  ...naturalAnimal,
+  sound: false,
+} satisfies Record<FeatureKey, boolean>
+
+const fishFeatures = {
+  color: true,
+  size: true,
+  quantity: true,
+  action: true,
+  environment: false,
+  time: false,
+  sound: false,
+} satisfies Record<FeatureKey, boolean>
+
 const vehicle = {
   ...allVisual,
   sound: true,
+} satisfies Record<FeatureKey, boolean>
+
+const quietVehicle = {
+  ...allVisual,
+  sound: false,
 } satisfies Record<FeatureKey, boolean>
 
 export const subjects: LearningSubject[] = [
@@ -66,6 +86,23 @@ export const subjects: LearningSubject[] = [
     defaultColor: '#facc15', features: vehicle, actionActive: 'moving', actionStill: 'parked', soundType: 'horn', soundLabel: 'Horn',
   },
   {
+    id: 'car', category: 'vehicles', name: 'Car', plural: 'cars', emoji: '🚗',
+    defaultColor: '#22c55e', features: vehicle, actionActive: 'moving', actionStill: 'parked', soundType: 'horn', soundLabel: 'Horn',
+  },
+  {
+    id: 'truck', category: 'vehicles', name: 'Truck', plural: 'trucks', emoji: '🚚',
+    defaultColor: '#2563eb', features: vehicle, actionActive: 'moving', actionStill: 'parked', soundType: 'horn', soundLabel: 'Horn',
+  },
+  {
+    id: 'taxi', category: 'vehicles', name: 'Taxi', plural: 'taxis', emoji: '🚕',
+    defaultColor: '#facc15', features: vehicle, actionActive: 'moving', actionStill: 'parked', soundType: 'horn', soundLabel: 'Horn',
+  },
+  {
+    id: 'bicycle', category: 'vehicles', name: 'Bicycle', plural: 'bicycles', emoji: '🚲',
+    defaultColor: '#ef4444', features: quietVehicle, actionActive: 'moving', actionStill: 'stopped', soundType: 'none',
+  },
+
+  {
     id: 'dog', category: 'animals', name: 'Dog', plural: 'dogs', emoji: '🐶',
     defaultColor: '#b87945', features: naturalAnimal, actionActive: 'walking', actionStill: 'standing', soundType: 'woof', soundLabel: 'Woof',
   },
@@ -81,6 +118,23 @@ export const subjects: LearningSubject[] = [
     id: 'elephant', category: 'animals', name: 'Elephant', plural: 'elephants', emoji: '🐘',
     defaultColor: '#8793a4', features: naturalAnimal, actionActive: 'walking', actionStill: 'standing', soundType: 'trumpet', soundLabel: 'Trumpet',
   },
+  {
+    id: 'rabbit', category: 'animals', name: 'Rabbit', plural: 'rabbits', emoji: '🐰',
+    defaultColor: '#d9c6b3', features: quietAnimal, actionActive: 'hopping', actionStill: 'sitting', soundType: 'none',
+  },
+  {
+    id: 'bird', category: 'animals', name: 'Bird', plural: 'birds', emoji: '🐦',
+    defaultColor: '#4da6e8', features: quietAnimal, actionActive: 'flying', actionStill: 'perched', soundType: 'none',
+  },
+  {
+    id: 'fish', category: 'animals', name: 'Fish', plural: 'fish', emoji: '🐟',
+    defaultColor: '#38bdf8', features: fishFeatures, actionActive: 'swimming', actionStill: 'floating', soundType: 'none',
+  },
+  {
+    id: 'bear', category: 'animals', name: 'Bear', plural: 'bears', emoji: '🐻',
+    defaultColor: '#8b5e3c', features: quietAnimal, actionActive: 'walking', actionStill: 'standing', soundType: 'none',
+  },
+
   {
     id: 'ball', category: 'objects', name: 'Ball', plural: 'balls', emoji: '⚽',
     defaultColor: '#2563eb', features: allVisual, actionActive: 'bouncing', actionStill: 'still', soundType: 'none',
@@ -98,6 +152,23 @@ export const subjects: LearningSubject[] = [
     defaultColor: '#a855f7', features: allVisual, actionActive: 'spinning', actionStill: 'still', soundType: 'none',
   },
   {
+    id: 'table', category: 'objects', name: 'Table', plural: 'tables', emoji: '🛋️',
+    defaultColor: '#b77942', features: allVisual, actionActive: 'spinning', actionStill: 'still', soundType: 'none',
+  },
+  {
+    id: 'box', category: 'objects', name: 'Box', plural: 'boxes', emoji: '📦',
+    defaultColor: '#d69e5f', features: allVisual, actionActive: 'spinning', actionStill: 'still', soundType: 'none',
+  },
+  {
+    id: 'apple', category: 'objects', name: 'Apple', plural: 'apples', emoji: '🍎',
+    defaultColor: '#ef4444', features: allVisual, actionActive: 'spinning', actionStill: 'still', soundType: 'none',
+  },
+  {
+    id: 'banana', category: 'objects', name: 'Banana', plural: 'bananas', emoji: '🍌',
+    defaultColor: '#facc15', features: allVisual, actionActive: 'spinning', actionStill: 'still', soundType: 'none',
+  },
+
+  {
     id: 'circle', category: 'shapes', name: 'Circle', plural: 'circles', emoji: '🔵',
     defaultColor: '#2563eb', features: allVisual, actionActive: 'spinning', actionStill: 'still', soundType: 'none',
   },
@@ -112,6 +183,22 @@ export const subjects: LearningSubject[] = [
   {
     id: 'star', category: 'shapes', name: 'Star', plural: 'stars', emoji: '⭐',
     defaultColor: '#facc15', features: allVisual, actionActive: 'spinning', actionStill: 'still', soundType: 'none',
+  },
+  {
+    id: 'rectangle', category: 'shapes', name: 'Rectangle', plural: 'rectangles', emoji: '▭',
+    defaultColor: '#2563eb', features: allVisual, actionActive: 'spinning', actionStill: 'still', soundType: 'none',
+  },
+  {
+    id: 'heart', category: 'shapes', name: 'Heart', plural: 'hearts', emoji: '❤️',
+    defaultColor: '#ef4444', features: allVisual, actionActive: 'spinning', actionStill: 'still', soundType: 'none',
+  },
+  {
+    id: 'oval', category: 'shapes', name: 'Oval', plural: 'ovals', emoji: '🥚',
+    defaultColor: '#a855f7', features: allVisual, actionActive: 'spinning', actionStill: 'still', soundType: 'none',
+  },
+  {
+    id: 'diamond', category: 'shapes', name: 'Diamond', plural: 'diamonds', emoji: '🔶',
+    defaultColor: '#f59e0b', features: allVisual, actionActive: 'spinning', actionStill: 'still', soundType: 'none',
   },
 ]
 
