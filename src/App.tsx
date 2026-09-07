@@ -6,6 +6,8 @@ import * as THREE from 'three'
 type TimeOfDay = 'day' | 'night'
 type EnvironmentName = 'city' | 'park'
 type SizeName = 'small' | 'big'
+type SpeechOption = 'color' | 'size' | 'quantity' | 'action' | 'environment' | 'time'
+type SpeechOptions = Record<SpeechOption, boolean>
 
 type FireTruckProps = {
   color: string
@@ -24,6 +26,15 @@ const colors = [
 ] as const
 
 const numberWords = ['Zero', 'One', 'Two', 'Three']
+
+const speechChoices: Array<{ key: SpeechOption; label: string; icon: string }> = [
+  { key: 'color', label: 'Color', icon: '🎨' },
+  { key: 'size', label: 'Size', icon: '📏' },
+  { key: 'quantity', label: 'Quantity', icon: '🔢' },
+  { key: 'action', label: 'Action', icon: '🏃' },
+  { key: 'environment', label: 'Place', icon: '🌍' },
+  { key: 'time', label: 'Time', icon: '☀️' },
+]
 
 function Wheel({ position }: { position: [number, number, number] }) {
   return (
@@ -211,7 +222,6 @@ function LearningScene({
     const center = (quantity - 1) / 2
     return [(index - center) * spacing, 0, 0] as [number, number, number]
   })
-
   const isNight = time === 'night'
 
   return (
@@ -228,7 +238,6 @@ function LearningScene({
         shadow-mapSize-height={1024}
       />
       {isNight && <pointLight position={[0, 5, 2]} intensity={28} distance={18} color="#ffd98a" />}
-
       {environment === 'city' ? <City /> : <Park />}
 
       {positions.map((position, index) => (
@@ -255,6 +264,53 @@ function LearningScene({
   )
 }
 
+function buildPhrase({
+  selectedColor,
+  size,
+  quantity,
+  moving,
+  environment,
+  time,
+  speechOptions,
+}: {
+  selectedColor: (typeof colors)[number]
+  size: SizeName
+  quantity: number
+  moving: boolean
+  environment: EnvironmentName
+  time: TimeOfDay
+  speechOptions: SpeechOptions
+}) {
+  const plural = speechOptions.quantity && quantity > 1
+  const words: string[] = []
+
+  if (speechOptions.quantity) words.push(numberWords[quantity].toLowerCase())
+  if (speechOptions.size) words.push(size)
+  if (speechOptions.color) words.push(selectedColor.name.toLowerCase())
+  words.push(plural ? 'fire trucks' : 'fire truck')
+
+  let phrase = words.join(' ')
+
+  if (speechOptions.action) {
+    const actionWord = moving ? 'moving' : 'parked'
+    if (speechOptions.quantity) {
+      phrase += ` ${quantity === 1 ? 'is' : 'are'} ${actionWord}`
+    } else {
+      phrase = `the ${phrase} is ${actionWord}`
+    }
+  }
+
+  if (speechOptions.environment) {
+    phrase += environment === 'city' ? ' in the city' : ' in the park'
+  }
+
+  if (speechOptions.time) {
+    phrase += time === 'day' ? ' during the day' : ' at night'
+  }
+
+  return `${phrase.charAt(0).toUpperCase()}${phrase.slice(1)}.`
+}
+
 function App() {
   const [selectedColor, setSelectedColor] = useState<(typeof colors)[number]>(colors[1])
   const [size, setSize] = useState<SizeName>('big')
@@ -262,12 +318,28 @@ function App() {
   const [moving, setMoving] = useState(false)
   const [environment, setEnvironment] = useState<EnvironmentName>('city')
   const [time, setTime] = useState<TimeOfDay>('day')
+  const [speechOptions, setSpeechOptions] = useState<SpeechOptions>({
+    color: true,
+    size: false,
+    quantity: false,
+    action: false,
+    environment: false,
+    time: false,
+  })
 
-  const noun = quantity === 1 ? 'fire truck' : 'fire trucks'
-  const verb = quantity === 1 ? 'is' : 'are'
-  const action = moving ? `${verb} moving` : `${verb} parked`
-  const place = environment === 'city' ? 'in the city' : 'in the park'
-  const phrase = `${numberWords[quantity]} ${size} ${selectedColor.name.toLowerCase()} ${noun} ${action} ${place} at ${time}.`
+  const phrase = buildPhrase({
+    selectedColor,
+    size,
+    quantity,
+    moving,
+    environment,
+    time,
+    speechOptions,
+  })
+
+  const toggleSpeechOption = (key: SpeechOption) => {
+    setSpeechOptions((current) => ({ ...current, [key]: !current[key] }))
+  }
 
   const speak = () => {
     window.speechSynthesis.cancel()
@@ -313,7 +385,7 @@ function App() {
           <p className="eyebrow">3D English Playground</p>
           <h1>Learn01</h1>
         </div>
-        <button className="speak-top" onClick={speak} aria-label="Read the English sentence">
+        <button className="speak-top" onClick={speak} aria-label="Read the English phrase">
           🔊 Read
         </button>
       </header>
@@ -340,6 +412,31 @@ function App() {
             <strong>{phrase}</strong>
             <span className="tap-hint">🔊 Tap to listen</span>
           </div>
+
+          <section className="control-group speech-control">
+            <div className="speech-heading">
+              <div>
+                <h2>🗣️ Read aloud</h2>
+                <p>Choose what to include. Fire truck is always included.</p>
+              </div>
+            </div>
+            <div className="speech-options">
+              <label className="speech-option locked">
+                <input type="checkbox" checked disabled />
+                <span>🚒 Object</span>
+              </label>
+              {speechChoices.map((choice) => (
+                <label key={choice.key} className={`speech-option ${speechOptions[choice.key] ? 'checked' : ''}`}>
+                  <input
+                    type="checkbox"
+                    checked={speechOptions[choice.key]}
+                    onChange={() => toggleSpeechOption(choice.key)}
+                  />
+                  <span>{choice.icon} {choice.label}</span>
+                </label>
+              ))}
+            </div>
+          </section>
 
           <section className="control-group">
             <h2>🎨 Color</h2>
