@@ -6,6 +6,7 @@ import { VehicleModel } from './VehicleModels'
 import { AnimalModel } from './AnimalModels'
 import { ObjectModel } from './ObjectModels'
 import { ShapeModel } from './ShapeModels'
+import { ExtraAnimalModel, ExtraObjectModel, ExtraShapeModel, ExtraVehicleModel } from './ExtraModels'
 
 type SubjectModelProps = {
   subject: LearningSubject
@@ -15,6 +16,11 @@ type SubjectModelProps = {
   active: boolean
   onClick: () => void
 }
+
+const extraVehicles = new Set(['car', 'truck', 'taxi', 'bicycle'])
+const extraAnimals = new Set(['rabbit', 'bird', 'fish', 'bear'])
+const extraObjects = new Set(['table', 'box', 'apple', 'banana'])
+const extraShapes = new Set(['rectangle', 'heart', 'oval', 'diamond'])
 
 export function SubjectModel({ subject, color, scale, position, active, onClick }: SubjectModelProps) {
   const group = useRef<THREE.Group>(null)
@@ -36,10 +42,10 @@ export function SubjectModel({ subject, color, scale, position, active, onClick 
       group.current.rotation.y = Math.sin(t * 0.75) * 0.035
     } else if (subject.category === 'animals') {
       group.current.position.x = position[0] + Math.sin(t * 1.25) * 0.45
-      group.current.position.y = Math.abs(Math.sin(t * 2.5)) * 0.055
+      group.current.position.y = position[1] + Math.abs(Math.sin(t * 2.5)) * 0.055
       group.current.rotation.z = Math.sin(t * 2.5) * 0.018
     } else if (subject.id === 'ball') {
-      group.current.position.y = Math.abs(Math.sin(t * 2.7)) * 0.9
+      group.current.position.y = position[1] + Math.abs(Math.sin(t * 2.7)) * 0.9
     } else {
       group.current.rotation.y = t * 0.78
     }
@@ -55,10 +61,26 @@ export function SubjectModel({ subject, color, scale, position, active, onClick 
         onClick()
       }}
     >
-      {subject.category === 'vehicles' && <VehicleModel kind={subject.id} color={color} />}
-      {subject.category === 'animals' && <AnimalModel kind={subject.id} color={color} />}
-      {subject.category === 'objects' && <ObjectModel kind={subject.id} color={color} />}
-      {subject.category === 'shapes' && <ShapeModel kind={subject.id} color={color} />}
+      {subject.category === 'vehicles' && (
+        extraVehicles.has(subject.id)
+          ? <ExtraVehicleModel kind={subject.id} color={color} />
+          : <VehicleModel kind={subject.id} color={color} />
+      )}
+      {subject.category === 'animals' && (
+        extraAnimals.has(subject.id)
+          ? <ExtraAnimalModel kind={subject.id} color={color} />
+          : <AnimalModel kind={subject.id} color={color} />
+      )}
+      {subject.category === 'objects' && (
+        extraObjects.has(subject.id)
+          ? <ExtraObjectModel kind={subject.id} color={color} />
+          : <ObjectModel kind={subject.id} color={color} />
+      )}
+      {subject.category === 'shapes' && (
+        extraShapes.has(subject.id)
+          ? <ExtraShapeModel kind={subject.id} color={color} />
+          : <ShapeModel kind={subject.id} color={color} />
+      )}
     </group>
   )
 }
