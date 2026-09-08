@@ -45,7 +45,7 @@ jobs:
             -o public/models/external/box.glb \
             https://raw.githubusercontent.com/chrisizeful/Operations/a989794e0c45de9e595cfd5b056054f80ca7c0d8/assets/kenney_toy-car-kit/item-box.glb
 
-          # Kenney Car Kit — CC0. These three have distinct emergency-vehicle silhouettes.
+          # Kenney Car Kit — CC0
           curl -L --fail --retry 3 \
             -o public/models/external/fire-truck.glb \
             https://raw.githubusercontent.com/kidscancode/3d_car_sphere/cabc5c0019e68913012fc41d7b2ded6dcef3be31/assets/kenney_car_kit/firetruck.glb
@@ -61,39 +61,25 @@ jobs:
             -o public/models/external/dog.glb \
             https://raw.githubusercontent.com/Ariescar/gobkit-free-assets/main/animal/Corgi.glb
 
-          # Poly Pizza models. The IDs and licenses are documented in 3d-asset-credits.html.
-          # Rabbit is Quaternius CC0; Lion/Elephant/Bear are CC-BY 3.0 and credited in-app.
-          python3 - <<'PY'
-          import re
-          import time
-          import urllib.request
-          from pathlib import Path
+          # Quaternius Rabbit — CC0, optimized mirror with source/license documented.
+          curl -L --fail --retry 3 \
+            -o public/models/external/rabbit.glb \
+            https://raw.githubusercontent.com/AryaaSk/Zootropolis/700b1e062241524bab573323b22440bfa3df3886/paperclip-master/ui/public/assets/zootropolis/animals/rabbit.glb
 
-          assets = {
-              'rabbit': 'mKev485XTR',
-              'lion': '3XAJojWxSWz',
-              'elephant': 'a27MA0rXyyj',
-              'bear': 'evjB26aGfTh',
-          }
-          out_dir = Path('public/models/external')
-          headers = {'User-Agent': 'Mozilla/5.0 Learn01 asset build'}
+          # Poly by Google Lion — CC BY 3.0, mirrored with credit metadata.
+          curl -L --fail --retry 3 \
+            -o public/models/external/lion.glb \
+            https://raw.githubusercontent.com/mrshippers/peoples-of-africa/7923b740cc0030c1dc8de8646ba17af3f79328ed/public/models/lion.glb
 
-          for name, model_id in assets.items():
-              page_url = f'https://poly.pizza/m/{model_id}'
-              page = urllib.request.urlopen(
-                  urllib.request.Request(page_url, headers=headers), timeout=60
-              ).read().decode('utf-8', 'ignore')
-              matches = re.findall(r'https://static\.poly\.pizza/[0-9a-f-]+\.glb', page)
-              if not matches:
-                  raise RuntimeError(f'No GLB download found for {name} ({model_id})')
-              glb_url = matches[0]
-              data = urllib.request.urlopen(
-                  urllib.request.Request(glb_url, headers=headers), timeout=120
-              ).read()
-              (out_dir / f'{name}.glb').write_bytes(data)
-              print(f'{name}: {len(data) // 1024} KiB from {model_id}')
-              time.sleep(0.6)
-          PY
+          # Poly by Google Elephant — CC BY 3.0, source documented in mirror credits.
+          curl -L --fail --retry 3 \
+            -o public/models/external/elephant.glb \
+            https://raw.githubusercontent.com/Alexander-Jordan/mitt-spel-om-bibeln/eedee2ecb19019f90bad7aa71cc9679aa0665bb9/assets/models/animals/elephant/elephant.glb
+
+          # molochdadev Bear — CC BY 4.0, mobile-optimized GLB with attribution in source repo.
+          curl -L --fail --retry 3 \
+            -o public/models/external/bear.glb \
+            https://raw.githubusercontent.com/yinasaurus/hack-for-humanity/f6b696a45da7b75aa8f1321dda694e7fea30a6f5/mobile/assets/characters/bear.glb
 
           ls -lh public/models/external
 
