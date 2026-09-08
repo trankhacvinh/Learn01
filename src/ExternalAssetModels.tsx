@@ -10,12 +10,19 @@ const assets = {
   truck: `${BASE}models/external/truck.glb`,
   dog: `${BASE}models/external/dog.glb`,
   box: `${BASE}models/external/box.glb`,
+  'fire-truck': `${BASE}models/external/fire-truck.glb`,
+  ambulance: `${BASE}models/external/ambulance.glb`,
+  'police-car': `${BASE}models/external/police-car.glb`,
+  rabbit: `${BASE}models/external/rabbit.glb`,
+  lion: `${BASE}models/external/lion.glb`,
+  elephant: `${BASE}models/external/elephant.glb`,
+  bear: `${BASE}models/external/bear.glb`,
 } as const
 
-type AssetKey = keyof typeof assets
+export type ExternalAssetKind = keyof typeof assets
 
 type ExternalAssetModelProps = {
-  kind: AssetKey
+  kind: ExternalAssetKind
   color: string
 }
 
@@ -24,7 +31,7 @@ function shouldTint(material: THREE.Material) {
   if (!standard.color) return false
 
   const name = material.name.toLowerCase()
-  if (/(glass|window|wheel|tire|tyre|rim|metal|chrome|light|black)/.test(name)) return false
+  if (/(glass|window|wheel|tire|tyre|rim|metal|chrome|light|lamp|black|red|blue)/.test(name)) return false
 
   const { r, g, b } = standard.color
   const brightness = (r + g + b) / 3
@@ -43,6 +50,7 @@ function prepareScene(
   targetSize: number,
   tint: boolean,
   rotationY = 0,
+  lift = 0,
 ) {
   const root = cloneSkeleton(source) as THREE.Group
   root.rotation.y = rotationY
@@ -84,6 +92,7 @@ function prepareScene(
   root.position.x -= center.x
   root.position.z -= center.z
   root.position.y -= box.min.y
+  root.position.y += lift
   root.updateMatrixWorld(true)
 
   return root
@@ -93,14 +102,29 @@ export function ExternalAssetModel({ kind, color }: ExternalAssetModelProps) {
   const gltf = useGLTF(assets[kind])
 
   const prepared = useMemo(() => {
-    const config = {
+    const config: Record<ExternalAssetKind, { targetSize: number; tint: boolean; rotationY: number; lift?: number }> = {
       car: { targetSize: 4.25, tint: true, rotationY: 0 },
       truck: { targetSize: 4.45, tint: true, rotationY: 0 },
       dog: { targetSize: 2.55, tint: false, rotationY: Math.PI / 2 },
       box: { targetSize: 2.15, tint: true, rotationY: 0 },
-    }[kind]
+      'fire-truck': { targetSize: 4.55, tint: true, rotationY: 0, lift: 0.02 },
+      ambulance: { targetSize: 4.35, tint: true, rotationY: 0, lift: 0.02 },
+      'police-car': { targetSize: 4.1, tint: true, rotationY: 0, lift: 0.02 },
+      rabbit: { targetSize: 2.55, tint: false, rotationY: Math.PI / 2 },
+      lion: { targetSize: 2.95, tint: false, rotationY: Math.PI / 2 },
+      elephant: { targetSize: 3.15, tint: false, rotationY: Math.PI / 2 },
+      bear: { targetSize: 2.85, tint: false, rotationY: Math.PI / 2 },
+    }
 
-    return prepareScene(gltf.scene, color, config.targetSize, config.tint, config.rotationY)
+    const selected = config[kind]
+    return prepareScene(
+      gltf.scene,
+      color,
+      selected.targetSize,
+      selected.tint,
+      selected.rotationY,
+      selected.lift ?? 0,
+    )
   }, [color, gltf.scene, kind])
 
   return <primitive object={prepared} />
