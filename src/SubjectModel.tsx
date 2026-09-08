@@ -1,5 +1,5 @@
 import { useFrame } from '@react-three/fiber'
-import { useRef } from 'react'
+import { Suspense, useRef } from 'react'
 import * as THREE from 'three'
 import type { LearningSubject } from './catalog'
 import { VehicleModel } from './VehicleModels'
@@ -7,6 +7,7 @@ import { AnimalModel } from './AnimalModels'
 import { ObjectModel } from './ObjectModels'
 import { ShapeModel } from './ShapeModels'
 import { ExtraAnimalModel, ExtraObjectModel, ExtraShapeModel, ExtraVehicleModel } from './ExtraModels'
+import { ExternalAssetModel } from './ExternalAssetModels'
 
 type SubjectModelProps = {
   subject: LearningSubject
@@ -17,10 +18,13 @@ type SubjectModelProps = {
   onClick: () => void
 }
 
+type ExternalKind = 'car' | 'truck' | 'dog' | 'box'
+
 const extraVehicles = new Set(['car', 'truck', 'taxi', 'bicycle'])
 const extraAnimals = new Set(['rabbit', 'bird', 'fish', 'bear'])
 const extraObjects = new Set(['table', 'box', 'apple', 'banana'])
 const extraShapes = new Set(['rectangle', 'heart', 'oval', 'diamond'])
+const externalSubjects = new Set<ExternalKind>(['car', 'truck', 'dog', 'box'])
 
 export function SubjectModel({ subject, color, scale, position, active, onClick }: SubjectModelProps) {
   const group = useRef<THREE.Group>(null)
@@ -51,6 +55,31 @@ export function SubjectModel({ subject, color, scale, position, active, onClick 
     }
   })
 
+  const fallbackModel = (() => {
+    if (subject.category === 'vehicles') {
+      return extraVehicles.has(subject.id)
+        ? <ExtraVehicleModel kind={subject.id} color={color} />
+        : <VehicleModel kind={subject.id} color={color} />
+    }
+    if (subject.category === 'animals') {
+      return extraAnimals.has(subject.id)
+        ? <ExtraAnimalModel kind={subject.id} color={color} />
+        : <AnimalModel kind={subject.id} color={color} />
+    }
+    if (subject.category === 'objects') {
+      return extraObjects.has(subject.id)
+        ? <ExtraObjectModel kind={subject.id} color={color} />
+        : <ObjectModel kind={subject.id} color={color} />
+    }
+    return extraShapes.has(subject.id)
+      ? <ExtraShapeModel kind={subject.id} color={color} />
+      : <ShapeModel kind={subject.id} color={color} />
+  })()
+
+  const externalKind = externalSubjects.has(subject.id as ExternalKind)
+    ? subject.id as ExternalKind
+    : null
+
   return (
     <group
       ref={group}
@@ -61,26 +90,11 @@ export function SubjectModel({ subject, color, scale, position, active, onClick 
         onClick()
       }}
     >
-      {subject.category === 'vehicles' && (
-        extraVehicles.has(subject.id)
-          ? <ExtraVehicleModel kind={subject.id} color={color} />
-          : <VehicleModel kind={subject.id} color={color} />
-      )}
-      {subject.category === 'animals' && (
-        extraAnimals.has(subject.id)
-          ? <ExtraAnimalModel kind={subject.id} color={color} />
-          : <AnimalModel kind={subject.id} color={color} />
-      )}
-      {subject.category === 'objects' && (
-        extraObjects.has(subject.id)
-          ? <ExtraObjectModel kind={subject.id} color={color} />
-          : <ObjectModel kind={subject.id} color={color} />
-      )}
-      {subject.category === 'shapes' && (
-        extraShapes.has(subject.id)
-          ? <ExtraShapeModel kind={subject.id} color={color} />
-          : <ShapeModel kind={subject.id} color={color} />
-      )}
+      {externalKind ? (
+        <Suspense fallback={fallbackModel}>
+          <ExternalAssetModel kind={externalKind} color={color} />
+        </Suspense>
+      ) : fallbackModel}
     </group>
   )
 }
