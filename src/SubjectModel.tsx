@@ -7,7 +7,7 @@ import { AnimalModel } from './AnimalModels'
 import { ObjectModel } from './ObjectModels'
 import { ShapeModel } from './ShapeModels'
 import { ExtraAnimalModel, ExtraObjectModel, ExtraShapeModel, ExtraVehicleModel } from './ExtraModels'
-import { ExternalAssetModel } from './ExternalAssetModels'
+import { ExternalAssetModel, type ExternalAssetKind } from './ExternalAssetModels'
 
 type SubjectModelProps = {
   subject: LearningSubject
@@ -18,13 +18,23 @@ type SubjectModelProps = {
   onClick: () => void
 }
 
-type ExternalKind = 'car' | 'truck' | 'dog' | 'box'
-
 const extraVehicles = new Set(['car', 'truck', 'taxi', 'bicycle'])
 const extraAnimals = new Set(['rabbit', 'bird', 'fish', 'bear'])
 const extraObjects = new Set(['table', 'box', 'apple', 'banana'])
 const extraShapes = new Set(['rectangle', 'heart', 'oval', 'diamond'])
-const externalSubjects = new Set<ExternalKind>(['car', 'truck', 'dog', 'box'])
+const externalSubjects = new Set<ExternalAssetKind>([
+  'car',
+  'truck',
+  'dog',
+  'box',
+  'fire-truck',
+  'ambulance',
+  'police-car',
+  'rabbit',
+  'lion',
+  'elephant',
+  'bear',
+])
 
 export function SubjectModel({ subject, color, scale, position, active, onClick }: SubjectModelProps) {
   const group = useRef<THREE.Group>(null)
@@ -76,8 +86,8 @@ export function SubjectModel({ subject, color, scale, position, active, onClick 
       : <ShapeModel kind={subject.id} color={color} />
   })()
 
-  const externalKind = externalSubjects.has(subject.id as ExternalKind)
-    ? subject.id as ExternalKind
+  const externalKind = externalSubjects.has(subject.id as ExternalAssetKind)
+    ? subject.id as ExternalAssetKind
     : null
 
   return (
