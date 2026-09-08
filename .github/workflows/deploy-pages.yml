@@ -29,6 +29,29 @@ jobs:
       - name: Install dependencies
         run: npm install
 
+      - name: Download CC0 3D assets
+        run: |
+          set -euxo pipefail
+          mkdir -p public/models/external
+
+          # Kenney Toy Car Kit — CC0
+          curl -L --fail --retry 3 \
+            -o public/models/external/car.glb \
+            https://raw.githubusercontent.com/chrisizeful/Operations/a989794e0c45de9e595cfd5b056054f80ca7c0d8/assets/kenney_toy-car-kit/vehicle/vehicle-racer.glb
+          curl -L --fail --retry 3 \
+            -o public/models/external/truck.glb \
+            https://raw.githubusercontent.com/chrisizeful/Operations/a989794e0c45de9e595cfd5b056054f80ca7c0d8/assets/kenney_toy-car-kit/vehicle/vehicle-monster-truck.glb
+          curl -L --fail --retry 3 \
+            -o public/models/external/box.glb \
+            https://raw.githubusercontent.com/chrisizeful/Operations/a989794e0c45de9e595cfd5b056054f80ca7c0d8/assets/kenney_toy-car-kit/item-box.glb
+
+          # Gobkit free Corgi — CC0
+          curl -L --fail --retry 3 \
+            -o public/models/external/dog.glb \
+            https://raw.githubusercontent.com/Ariescar/gobkit-free-assets/main/animal/Corgi.glb
+
+          ls -lh public/models/external
+
       - name: Build
         run: npm run build
 
